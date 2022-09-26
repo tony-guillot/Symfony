@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ArticlesRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 $time = date('H:i:s \O\n d/m/Y');
@@ -27,6 +29,14 @@ class Articles
 
     #[ORM\Column]
     private ?\DateTime $createdAt = null;
+
+    #[ORM\OneToMany(mappedBy: 'article', targetEntity: Comments::class)]
+    private Collection $comments;
+
+    public function __construct()
+    {
+        $this->comments = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -77,6 +87,36 @@ class Articles
     public function setCreatedAt(\DateTime $createdAt): self
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Comments>
+     */
+    public function getComments(): Collection
+    {
+        return $this->comments;
+    }
+
+    public function addComment(Comments $comment): self
+    {
+        if (!$this->comments->contains($comment)) {
+            $this->comments->add($comment);
+            $comment->setArticle($this);
+        }
+
+        return $this;
+    }
+
+    public function removeComment(Comments $comment): self
+    {
+        if ($this->comments->removeElement($comment)) {
+            // set the owning side to null (unless already changed)
+            if ($comment->getArticle() === $this) {
+                $comment->setArticle(null);
+            }
+        }
 
         return $this;
     }
